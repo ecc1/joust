@@ -1,8 +1,30 @@
-type name = string list
+type ident
+
+val ident: string -> int -> ident
+
+val synth_id: string -> ident
+
+val id_string: ident -> string
+
+val star_ident: ident
+
+val this_ident: ident
+
+val super_ident: ident
+
+type name = ident list
+
+type names = name list
 
 type typ =
   | TypeName of name
   | ArrayType of typ
+
+val no_type: typ
+
+val void_type: typ
+
+val named_type: string -> typ
 
 type modifier =
   | Public
@@ -20,15 +42,18 @@ type modifier =
 type modifiers = modifier list
 
 type var_decl_id =
-  | IdentDecl of string
+  | IdentDecl of ident
   | ArrayDecl of var_decl_id
 
 type op = string
 
 type compilation_unit =
   { package: name option;
-    imports: name list;
-    decls: decl list  }
+    imports: names;
+    decls: decls;
+    comments: Source.comments }
+
+and decls = decl list
 
 and decl =
   | Class of class_decl
@@ -41,16 +66,16 @@ and decl =
 
 and class_decl =
   { cl_mods: modifiers;
-    cl_name: string;
+    cl_name: ident;
     cl_super: name option;
-    cl_impls: name list;
-    cl_body: decl list }
+    cl_impls: names;
+    cl_body: decls }
 
 and interface =
   { if_mods: modifiers;
-    if_name: string;
-    if_exts: name list;
-    if_body: decl list }
+    if_name: ident;
+    if_exts: names;
+    if_body: decls }
 
 and field =
   { f_var: var;
@@ -58,52 +83,60 @@ and field =
 
 and method_decl =
   { m_var: var;
-    m_formals: var list;
-    m_throws: name list;
+    m_formals: vars;
+    m_throws: names;
     m_body: stmt }
+
+and vars = var list
 
 and var =
   { v_mods: modifiers;
     v_type: typ;
-    v_name: string }
+    v_name: ident }
 
 and init =
   | ExprInit of expr
   | ArrayInit of init list
 
 and stmt =
-  | Block of stmt list
+  | Block of stmts
   | LocalVar of field
   | LocalClass of class_decl
   | Empty
-  | Label of string * stmt
+  | Label of ident * stmt
   | Expr of expr
   | If of expr * stmt * stmt option
-  | Switch of expr * (case list * stmt list) list
+  | Switch of expr * (cases * stmts) list
   | While of expr * stmt
   | Do of stmt * expr
-  | For of stmt list * expr option * stmt list * stmt
-  | Break of string option
-  | Continue of string option
+  | For of stmts * expr option * stmts * stmt
+  | Break of ident option
+  | Continue of ident option
   | Return of expr option
   | Throw of expr
   | Sync of expr * stmt
-  | Try of stmt * catch list * stmt option
+  | Try of stmt * catches * stmt option
+
+and stmts = stmt list
 
 and case =
   | Case of expr
   | Default
+
+and cases = case list
+
+and catches = catch list
 
 and catch = var * stmt
 
 and expr =
   | Literal of string
   | ClassLiteral of typ
-  | NewClass of typ * expr list * decl list option
-  | NewQualifiedClass of expr * string * expr list * decl list option
-  | NewArray of typ * expr list * int * init option
-  | Dot of expr * string
-  | Call of expr * expr list
+  | NewClass of typ * exprs * decls option
+  | NewQualifiedClass of expr * ident * exprs * decls option
+  | NewArray of typ * exprs * int * init option
+  | Dot of expr * ident
+  | Call of expr * exprs
   | ArrayAccess of expr * expr
   | Postfix of expr * op
   | Prefix of op * expr
@@ -112,28 +145,40 @@ and expr =
   | InstanceOf of expr * typ
   | Conditional of expr * expr * expr
   | Assignment of expr * op * expr
-  | Name of string list
+  | Name of name
 
-val compilation_unit: name option -> name list -> decl list -> compilation_unit
+and exprs = expr list
 
-val class_decl:
-    modifiers -> string -> name option -> name list -> decl list -> class_decl
+type mdeclarator = var_decl_id * vars
+
+type var_decls = (var_decl_id * init option) list
+
+val add_comments: compilation_unit -> compilation_unit
+
+val compilation_unit: name option -> names -> decls -> compilation_unit
+
+val class_decl: modifiers -> ident -> name option -> names -> decls -> class_decl
 
 val method_decl: method_decl -> stmt -> method_decl
 
-val interface_decl: modifiers -> string -> name list -> decl list -> interface
+val interface_decl: modifiers -> ident -> names -> decls -> interface
 
-val method_header:
-    modifiers -> typ -> (var_decl_id * var list) -> name list -> method_decl
+val method_header: modifiers -> typ -> mdeclarator -> names -> method_decl
 
-val field_decls:
-    modifiers -> typ -> (var_decl_id * init option) list -> decl list
+val field_decls: modifiers -> typ -> var_decls -> decls
 
-val var_decls:
-    modifiers -> typ -> (var_decl_id * init option) list -> stmt list
+val var_decls: modifiers -> typ -> var_decls -> stmts
 
 val formal_decl: modifiers -> typ -> var_decl_id -> var
 
-val constructor: modifiers -> (string * var list) -> name list -> stmt -> decl
+val constructor: modifiers -> (ident * vars) -> names -> stmt -> decl
 
-val type_name : expr -> typ
+val constructor_invocation: name -> exprs -> stmt
+
+val expr_super_invocation: expr -> exprs -> stmt
+
+val type_name: expr -> typ
+
+val id_pos: ident -> int
+
+val stmt_pos: stmt -> int

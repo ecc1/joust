@@ -17,7 +17,7 @@ open Syntax
 
 %}
 
-%token <string> IDENTIFIER
+%token <Syntax.ident> IDENTIFIER
 %token <string> LITERAL
 %token <string> PRIMITIVE_TYPE
 
@@ -87,7 +87,7 @@ open Syntax
 %%
 
 goal:
-	CompilationUnit EOF  { $1 }
+	CompilationUnit EOF  { add_comments $1 }
 ;
 
 /* 3.8 */
@@ -112,7 +112,7 @@ Type:
 /* 4.2 */
 
 PrimitiveType:
-	PRIMITIVE_TYPE  { TypeName [$1] }
+	PRIMITIVE_TYPE  { named_type $1 }
 ;
 
 /* 4.3 */
@@ -201,7 +201,7 @@ SingleTypeImportDeclaration:
 /* 7.5.2 */
 
 TypeImportOnDemandDeclaration:
-	IMPORT Name DOT TIMES SM  { $2 @ ["*"] }
+	IMPORT Name DOT TIMES SM  { $2 @ [star_ident] }
 ;
 
 /* 7.6 */
@@ -351,7 +351,7 @@ MethodHeader:
 	ModifiersOpt Type MethodDeclarator ThrowsOpt
 		{ method_header $1 $2 $3 $4 }
 |	ModifiersOpt VOID MethodDeclarator ThrowsOpt
-		{ method_header $1 (TypeName ["void"]) $3 $4 }
+		{ method_header $1 void_type $3 $4 }
 ;
 
 MethodDeclarator:
@@ -438,16 +438,16 @@ ConstructorBody:
 
 ExplicitConstructorInvocation:
 	THIS LP ArgumentListOpt RP SM
-		{ Expr (Call (Name ["this"], $3)) }
+		{ constructor_invocation [this_ident] $3 }
 |	SUPER LP ArgumentListOpt RP SM
-		{ Expr (Call (Name ["super"], $3)) }
+		{ constructor_invocation [super_ident] $3 }
 |	Primary DOT SUPER LP ArgumentListOpt RP SM
-		{ Expr (Call (Dot ($1, "super"), $5)) }
+		{ expr_super_invocation $1 $5 }
 	/*
 	 * Not in 2nd edition Java Language Specification.
 	 */
 |	Name DOT SUPER LP ArgumentListOpt RP SM
-		{ Expr (Call (Dot (Name $1, "super"), $5)) }
+		{ constructor_invocation ($1 @ [super_ident]) $5 }
 ;
 
 /* 9.1 */
@@ -511,7 +511,7 @@ AbstractMethodDeclaration:
 	ModifiersOpt Type MethodDeclarator ThrowsOpt SM
 		{ method_header $1 $2 $3 $4 }
 |	ModifiersOpt VOID MethodDeclarator ThrowsOpt SM
-		{ method_header $1 (TypeName ["void"]) $3 $4 }
+		{ method_header $1 void_type $3 $4 }
 ;
 
 /* 10.6 */
@@ -815,8 +815,8 @@ Primary:
 PrimaryNoNewArray:
 	Literal  { Literal $1 }
 |	ClassLiteral  { $1 }
-|	THIS  { Name ["this"] }
-|	Name DOT THIS  { Dot (Name $1, "this") }
+|	THIS  { Name [this_ident] }
+|	Name DOT THIS  { Name ($1 @ [this_ident]) }
 |	LP Expression RP  { $2 }
 |	ClassInstanceCreationExpression  { $1 }
 |	FieldAccess  { $1 }
@@ -830,7 +830,7 @@ ClassLiteral:
 	PrimitiveType DOT CLASS  { ClassLiteral $1 }
 |	Name DOT CLASS  { ClassLiteral (TypeName $1) }
 |	ArrayType DOT CLASS  { ClassLiteral $1 }
-|	VOID DOT CLASS  { ClassLiteral (TypeName ["void"]) }
+|	VOID DOT CLASS  { ClassLiteral void_type }
 ;
 
 /* 15.9 */
@@ -900,9 +900,9 @@ FieldAccess:
 	Primary DOT Identifier
 		{ Dot ($1, $3) }
 |	SUPER DOT Identifier
-		{ Dot (Name ["super"], $3) }
+		{ Name [super_ident; $3] }
 |	Name DOT SUPER DOT Identifier
-		{ Dot (Dot (Name $1, "super"), $5) }
+		{ Name ($1 @ [super_ident; $5]) }
 ;
 
 /* 15.12 */
@@ -912,9 +912,9 @@ MethodInvocation:
 |	Primary DOT Identifier LP ArgumentListOpt RP
 		{ Call (Dot ($1, $3), $5) }
 |	SUPER DOT Identifier LP ArgumentListOpt RP
-		{ Call (Dot (Name ["super"], $3), $5) }
+		{ Call (Name [super_ident; $3], $5) }
 |	Name DOT SUPER DOT Identifier LP ArgumentListOpt RP
-		{ Call (Dot (Dot (Name $1, "super"), $5), $7) }
+		{ Call (Name ($1 @ [super_ident; $5]), $7) }
 ;
 
 /* 15.13 */

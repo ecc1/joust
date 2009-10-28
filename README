@@ -4,8 +4,8 @@ Pretty-printing options:
       prints expressions in canonical form (fully parenthesized)
     pretty_bare.ml
       prints expressions in bare form with fewer parentheses
-    pretty_min.ml
-      prints expressions with minimal parentheses
+    pretty_min.ml (recommended)
+      uses operator precedence to print expressions with minimal parentheses
   *** WARNING: always do "make clean" after changing the symlink ***
 
 Java source code used for testing:

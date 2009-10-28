@@ -1,7 +1,7 @@
 open Parser
 
 let to_string = function
-  | IDENTIFIER s -> "Identifier " ^ s
+  | IDENTIFIER id -> "Identifier " ^ Syntax.id_string id
   | PRIMITIVE_TYPE s -> "PrimitiveType " ^ s
   | LITERAL s -> "Literal " ^ s
 

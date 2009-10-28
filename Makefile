@@ -1,6 +1,6 @@
 CAML = ocamlopt.opt
 
-PROGRAMS = lextest parsetest pptest
+PROGRAMS = lextest parsetest pptest comtest
 
 all: $(PROGRAMS)
 
@@ -16,25 +16,22 @@ parser.mli parser.ml: parser.mly
 lexer.ml: lexer.mll
 	ocamllex lexer.mll
 
-syntax.cmx: syntax.cmi
-parser.cmx: syntax.cmi parser.cmi
-reserved.cmi: parser.cmi
-reserved.cmx: parser.cmi reserved.cmi
-lexer.cmx: parser.cmi reserved.cmi
-pretty.cmx: syntax.cmi pretty.cmi
+-include .depend
 
-lextest.cmx: syntax.cmi parser.cmi lexer.cmx
-parsetest.cmx: syntax.cmi parser.cmi lexer.cmx
-pptest.cmx: syntax.cmi pretty.cmi parser.cmi lexer.cmx
+MODULES = source.cmx syntax.cmx parser.cmx reserved.cmx lexer.cmx 
 
-lextest: syntax.cmx parser.cmx reserved.cmx lexer.cmx lextest.cmx
-parsetest: syntax.cmx parser.cmx reserved.cmx lexer.cmx parsetest.cmx
-pptest: syntax.cmx pretty.cmx parser.cmx reserved.cmx lexer.cmx pptest.cmx
+lextest: $(MODULES) lextest.cmx
+parsetest: $(MODULES) parsetest.cmx
+pptest: $(MODULES) pretty.cmx pptest.cmx
+comtest: $(MODULES) pretty.cmx comtest.cmx
 
 $(PROGRAMS): %:
 	$(CAML) -o $@ $^
 
-.PHONY: clean
+.PHONY: clean depend
 
 clean:
-	rm -f $(PROGRAMS) parser.{mli,ml} lexer.ml *.cm[iox] *.o *~ .*~ \#*\#
+	-rm -f $(PROGRAMS) parser.{mli,ml} lexer.ml *.cm[iox] *.o *~ .*~ \#*\#
+
+depend: parser.mli parser.ml lexer.ml
+	ocamldep *.{mli,ml} > .depend

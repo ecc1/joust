@@ -13,36 +13,20 @@
 
 {
 
+open Source
 open Parser
 
 let identifier buf =
   let s = Lexing.lexeme buf in
   match Reserved.lookup s with
   | Some t -> t
-  | None -> IDENTIFIER s
+  | None -> IDENTIFIER (Syntax.ident s (Source.lexeme_pos buf))
 
 let literal buf =
   LITERAL (Lexing.lexeme buf)
 
 let assign_op buf =
   OPERATOR_EQ (Lexing.lexeme buf)
-
-let file = ref ""
-
-let line = ref 0
-
-let set_file_name f =
-  file := f;
-  line := 1
-
-let open_file () =
-  Lexing.from_channel (open_in !file)
-
-let next_line () =
-  line := !line + 1
-
-let location () =
-  Printf.sprintf "file %s, line %d" !file !line
 
 exception Unterminated_comment
 
@@ -156,12 +140,18 @@ let AssignmentOperator =
   ('+' | '-' | '*' | '/' | '&' | '|' | '^' | '%' | "<<" | ">>" | ">>>") '='
 
 rule token = parse
-| WhiteSpace  { token lexbuf }
-| LineTerminator  { next_line (); token lexbuf }
-| "/*" { comment lexbuf; token lexbuf }
-| EndOfLineComment  { next_line (); token lexbuf }
-| Identifier  { identifier lexbuf }
-| Literal  { literal lexbuf }
+| WhiteSpace
+    { token lexbuf }
+| LineTerminator
+    { next_line lexbuf; token lexbuf }
+| "/*"
+    { begin_comment lexbuf; comment lexbuf; token lexbuf }
+| EndOfLineComment
+    { eol_comment lexbuf; next_line lexbuf; token lexbuf }
+| Identifier
+    { identifier lexbuf }
+| Literal
+    { literal lexbuf }
 
 (* 3.11 Separators *)
 | '('  { LP }
@@ -206,7 +196,7 @@ rule token = parse
 | SUB? eof { EOF }
 
 and comment = parse
-  "*/" { () }
-| LineTerminator  { next_line (); comment lexbuf }
+  "*/" { end_comment lexbuf }
+| LineTerminator  { continue_comment lexbuf; next_line lexbuf; comment lexbuf }
 | eof  { raise Unterminated_comment }
-| _  { comment lexbuf }
+| _  { continue_comment lexbuf; comment lexbuf }
