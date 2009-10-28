@@ -1,3 +1,7 @@
+(* Joust: a Java lexer, parser, and pretty-printer written in OCaml
+   Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
+   Released under the GNU General Public License *)
+
 (* Java reserved words. *)
 
 open Parser
@@ -8,11 +12,9 @@ let hash_table list =
   List.iter (fun (s, t) -> Hashtbl.add tbl s t) list;
   tbl
 
-let literal v =
-  v, LITERAL v
+let literal v = (v, LITERAL v)
 
-let primitive_type t =
-  t, PRIMITIVE_TYPE t
+let primitive_type t = (t, PRIMITIVE_TYPE t)
 
 let words = hash_table [
   "abstract", ABSTRACT;

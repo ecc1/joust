@@ -1,3 +1,10 @@
+# Joust: a Java lexer, parser, and pretty-printer written in OCaml
+# Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
+# Released under the GNU General Public License
+
+VERSION = 0.5
+PACKAGE = joust-$(VERSION)
+
 CAML = ocamlopt.opt
 
 PROGRAMS = lextest parsetest pptest comtest
@@ -35,3 +42,8 @@ clean:
 
 depend: parser.mli parser.ml lexer.ml
 	ocamldep *.{mli,ml} > .depend
+
+tarball:
+	@ln -s . $(PACKAGE); \
+	tar cvzf $(PACKAGE).tar.gz $(PACKAGE)/{copyright,README,Makefile,lexer.mll,parser.mly,*.mli,*.ml,*.sh}; \
+	rm $(PACKAGE)

@@ -1,18 +1,17 @@
-(* ocamllex lexer for Java *)
+(* Joust: a Java lexer, parser, and pretty-printer written in OCaml
+   Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
+   Released under the GNU General Public License *)
 
-(*
-	The Java Language Specification
+(* ocamllex lexer for Java
 
-	Second Edition
+   Attempts to conform to:
 
-	James Gosling
-	Bill Joy
-	Guy Steele
-	Gilad Bracha
-*)
+   The Java Language Specification
+   Second Edition
+
+   James Gosling, Bill Joy, Guy Steele, Gilad Bracha *)
 
 {
-
 open Source
 open Parser
 
@@ -29,7 +28,6 @@ let assign_op buf =
   OPERATOR_EQ (Lexing.lexeme buf)
 
 exception Unterminated_comment
-
 }
 
 (* CHAPTER 3: Lexical Structure *)

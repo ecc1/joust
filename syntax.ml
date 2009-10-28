@@ -1,3 +1,7 @@
+(* Joust: a Java lexer, parser, and pretty-printer written in OCaml
+   Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
+   Released under the GNU General Public License *)
+
 type ident = { id: string; pos: int }
 
 let ident s n = { id = s; pos = n }

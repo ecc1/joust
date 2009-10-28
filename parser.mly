@@ -1,20 +1,18 @@
-/* LALR(1) (ocamlyacc) grammar for Java */
+/* Joust: a Java lexer, parser, and pretty-printer written in OCaml
+   Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
+   Released under the GNU General Public License */
 
-/*
-	The Java Language Specification
+/* LALR(1) (ocamlyacc) grammar for Java
 
-	Second Edition
+   Attempts to conform to:
 
-	James Gosling
-	Bill Joy
-	Guy Steele
-	Gilad Bracha
-*/
+   The Java Language Specification
+   Second Edition
+
+   James Gosling, Bill Joy, Guy Steele, Gilad Bracha */
 
 %{
-
 open Syntax
-
 %}
 
 %token <Syntax.ident> IDENTIFIER
