@@ -2,7 +2,7 @@
 # Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
 # Released under the GNU General Public License
 
-VERSION = 0.6
+VERSION = 0.7
 PACKAGE = joust-$(VERSION)
 
 CAML = ocamlopt.opt
@@ -25,7 +25,7 @@ lexer.ml: lexer.mll
 
 -include .depend
 
-MODULES = source.cmx syntax.cmx parser.cmx reserved.cmx lexer.cmx 
+MODULES = source.cmx syntax.cmx parser.cmx reserved.cmx lexer.cmx
 
 lextest: $(MODULES) lextest.cmx
 parsetest: $(MODULES) parsetest.cmx
@@ -35,7 +35,7 @@ comtest: $(MODULES) pretty.cmx comtest.cmx
 $(PROGRAMS): %:
 	$(CAML) -o $@ $^
 
-.PHONY: clean depend
+.PHONY: clean depend tarball
 
 clean:
 	-rm -f $(PROGRAMS) parser.{mli,ml} lexer.ml *.cm[iox] *.o *~ .*~ \#*\#
@@ -45,5 +45,5 @@ depend: parser.mli parser.ml lexer.ml
 
 tarball:
 	@ln -s . $(PACKAGE); \
-	tar cvzf $(PACKAGE).tar.gz $(PACKAGE)/{copyright,README,Makefile,lexer.mll,parser.mly,*.mli,*.ml,*.sh}; \
+	tar cvzf $(PACKAGE).tar.gz $(PACKAGE)/{copyright,README,Makefile,lexer.mll,parser.{y,mly},*.mli,*.ml,*.sh}; \
 	rm $(PACKAGE)

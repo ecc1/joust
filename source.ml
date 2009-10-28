@@ -17,7 +17,7 @@ let location () = Printf.sprintf "file %s, line %d" !file !line
 
 let lexeme_pos buf = Lexing.lexeme_start buf
 
-type comment = { mutable buffer : string; mutable pos : int } 
+type comment = { mutable buffer : string; mutable pos : int }
 
 type comments = comment list
 

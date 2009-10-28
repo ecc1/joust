@@ -162,7 +162,7 @@ type var_decls = (var_decl_id * init option) list
 let add_comments comp =
   { comp with comments = Source.comments () }
 
-let compilation_unit pkg ims dcls =	
+let compilation_unit pkg ims dcls =
   { package = pkg; imports = ims; decls = dcls; comments = [] }
 
 let class_decl mods name super ifs body =

@@ -18,8 +18,8 @@ val eol_comment : Lexing.lexbuf -> unit
 
 val lexeme_pos : Lexing.lexbuf -> int
 
-type comment = { mutable buffer : string; mutable pos : int } 
+type comment = { mutable buffer : string; mutable pos : int }
 
 type comments = comment list
 
-val comments : unit -> comment list
+val comments : unit -> comments
