@@ -79,4 +79,4 @@ let words = hash_table [
 ]
 
 let lookup name =
-  try Some (Hashtbl.find words name) with _ -> None
+  try Some (Hashtbl.find words name) with Not_found -> None

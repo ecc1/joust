@@ -24,16 +24,36 @@ let identifier buf =
 let literal buf =
   LITERAL (Lexing.lexeme buf)
 
-} 
+let file = ref ""
+
+let line = ref 0
+
+let set_file_name f =
+  file := f;
+  line := 1
+
+let open_file () =
+  Lexing.from_channel (open_in !file)
+
+let next_line () =
+  line := !line + 1
+
+let location () =
+  Printf.sprintf "file %s, line %d" !file !line
+
+exception Unterminated_comment
+
+}
 
 (* CHAPTER 3: Lexical Structure *)
 
 (* 3.4 Line Terminators *)
 
-let LF = '\n'    (* newline *)
-let CR = '\r'    (* return *)
+let LF = '\n'  (* newline *)
+let CR = '\r'  (* return *)
 
 let LineTerminator = LF | CR | CR LF
+let InputCharacter = [^ '\r' '\n']
 
 (* 3.5 Input Elements and Tokens *)
 
@@ -43,15 +63,15 @@ let SUB = '\026' (* control-Z *) (* decimal *)
 
 let SP = ' '     (* space *)
 let HT = '\t'    (* horizontal tab *)
-let FF = '\009'  (* form feed *) (* decimal *)
+let FF = '\012'  (* form feed *) (* decimal *)
 
-let WhiteSpace = SP | HT | FF | LineTerminator
+let WhiteSpace = SP | HT | FF (* | LineTerminator -- handled separately *)
 
 (* 3.7 Comments *)
 
-let TraditionalComment = "/*" ([^ '*'] | '*' [^ '/'])* "*/"
-let EndOfLineComment = "//" [^ '\n' '\r']* LineTerminator
-let Comment = TraditionalComment | EndOfLineComment
+(* let TraditionalComment = "/*" ([^ '*'] | '*' [^ '/'])* "*/" *)
+let EndOfLineComment = "//" InputCharacter* LineTerminator
+(* let Comment = TraditionalComment | EndOfLineComment *)
 
 (* 3.8 Identifiers *)
 
@@ -92,9 +112,16 @@ let BooleanLiteral = "true" | "false"
 
 (* 3.10.6 Escape Sequences for Character and String Literals *)
 
+let OctalEscape = '\\' ['0'-'3']? OctalDigit? OctalDigit
+
+(* Not in spec -- added because we don't handle Unicode elsewhere. *)
+
+let UnicodeEscape = "\\u" HexDigit HexDigit HexDigit HexDigit
+
 let EscapeSequence =
   '\\' ['b' 't' 'n' 'f' 'r' '"' '\'' '\\']
-| '\\' (['0'-'3']? OctalDigit)? OctalDigit
+| OctalEscape
+| UnicodeEscape
 
 (* 3.10.4 Character Literals *)
 
@@ -122,7 +149,9 @@ let Literal =
 
 rule token = parse
 | WhiteSpace  { token lexbuf }
-| Comment  { token lexbuf }
+| LineTerminator  { next_line (); token lexbuf }
+| "/*" { comment lexbuf; token lexbuf }
+| EndOfLineComment  { next_line (); token lexbuf }
 | Identifier  { identifier lexbuf }
 | Literal  { literal lexbuf }
 
@@ -177,3 +206,9 @@ rule token = parse
 | ">>>="  { OPERATOR_EQ URS }
 
 | SUB? eof { EOF }
+
+and comment = parse
+  "*/" { () }
+| LineTerminator  { next_line (); comment lexbuf }
+| eof  { raise Unterminated_comment }
+| _  { comment lexbuf }
