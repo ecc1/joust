@@ -2,7 +2,7 @@
 # Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
 # Released under the GNU General Public License
 
-VERSION = 0.5
+VERSION = 0.6
 PACKAGE = joust-$(VERSION)
 
 CAML = ocamlopt.opt

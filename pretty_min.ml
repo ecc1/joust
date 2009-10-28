@@ -386,7 +386,7 @@ and print_stmts f =
 
 and print_body f st =
   match st with
-  | Block (_::_) -> fprintf f " %a" print_stmt st
+  | Block (_ :: _) -> fprintf f " %a" print_stmt st
   | _ -> fprintf f "@\n@[<2>  %a@]" print_stmt st
 
 and print_switch f sw =

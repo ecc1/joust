@@ -2,7 +2,7 @@
    Copyright (C) 2001  Eric C. Cooper <ecc@cmu.edu>
    Released under the GNU General Public License *)
 
-type ident = { id: string; pos: int }
+type ident = { id : string; pos : int }
 
 let ident s n = { id = s; pos = n }
 
@@ -54,10 +54,10 @@ type var_decl_id =
 type op = string
 
 type compilation_unit =
-  { package: name option;
-    imports: names;
-    decls: decls;
-    comments: Source.comments }
+  { package : name option;
+    imports : names;
+    decls : decls;
+    comments : Source.comments }
 
 and decls = decl list
 
@@ -71,34 +71,34 @@ and decl =
   | Constructor of method_decl
 
 and class_decl =
-  { cl_mods: modifiers;
-    cl_name: ident;
-    cl_super: name option;
-    cl_impls: names;
-    cl_body: decls }
+  { cl_mods : modifiers;
+    cl_name : ident;
+    cl_super : name option;
+    cl_impls : names;
+    cl_body : decls }
 
 and interface =
-  { if_mods: modifiers;
-    if_name: ident;
-    if_exts: names;
-    if_body: decls }
+  { if_mods : modifiers;
+    if_name : ident;
+    if_exts : names;
+    if_body : decls }
 
 and field =
-  { f_var: var;
-    f_init: init option }
+  { f_var : var;
+    f_init : init option }
 
 and method_decl =
-  { m_var: var;
-    m_formals: vars;
-    m_throws: names;
-    m_body: stmt }
+  { m_var : var;
+    m_formals : vars;
+    m_throws : names;
+    m_body : stmt }
 
 and vars = var list
 
 and var =
-  { v_mods: modifiers;
-    v_type: typ;
-    v_name: ident }
+  { v_mods : modifiers;
+    v_type : typ;
+    v_name : ident }
 
 and init =
   | ExprInit of expr
