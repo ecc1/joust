@@ -1,6 +1,6 @@
 open Parser
 
-let rec to_string = function
+let to_string = function
   | IDENTIFIER s -> "Identifier " ^ s
   | PRIMITIVE_TYPE s -> "PrimitiveType " ^ s
   | LITERAL s -> "Literal " ^ s
@@ -43,7 +43,7 @@ let rec to_string = function
   | LS -> "<<"
   | SRS -> ">>"
   | URS -> ">>>"
-  | OPERATOR_EQ op -> to_string op ^ "="
+  | OPERATOR_EQ op -> op
 
   | ABSTRACT -> "abstract"
   | BOOLEAN -> "boolean"

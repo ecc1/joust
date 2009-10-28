@@ -1,6 +1,6 @@
 CAML = ocamlopt.opt
 
-PROGRAMS = lextest parsetest
+PROGRAMS = lextest parsetest pptest
 
 all: $(PROGRAMS)
 
@@ -16,16 +16,20 @@ parser.mli parser.ml: parser.mly
 lexer.ml: lexer.mll
 	ocamllex lexer.mll
 
-parser.cmx: parser.cmi
+syntax.cmx: syntax.cmi
+parser.cmx: syntax.cmi parser.cmi
 reserved.cmi: parser.cmi
 reserved.cmx: parser.cmi reserved.cmi
 lexer.cmx: parser.cmi reserved.cmi
+pretty.cmx: syntax.cmi pretty.cmi
 
-lextest.cmx: parser.cmi lexer.cmx
-parsetest.cmx: parser.cmi lexer.cmx
+lextest.cmx: syntax.cmi parser.cmi lexer.cmx
+parsetest.cmx: syntax.cmi parser.cmi lexer.cmx
+pptest.cmx: syntax.cmi pretty.cmi parser.cmi lexer.cmx
 
-lextest: parser.cmx reserved.cmx lexer.cmx lextest.cmx
-parsetest: parser.cmx reserved.cmx lexer.cmx  parsetest.cmx
+lextest: syntax.cmx parser.cmx reserved.cmx lexer.cmx lextest.cmx
+parsetest: syntax.cmx parser.cmx reserved.cmx lexer.cmx parsetest.cmx
+pptest: syntax.cmx pretty.cmx parser.cmx reserved.cmx lexer.cmx pptest.cmx
 
 $(PROGRAMS): %:
 	$(CAML) -o $@ $^

@@ -24,6 +24,9 @@ let identifier buf =
 let literal buf =
   LITERAL (Lexing.lexeme buf)
 
+let assign_op buf =
+  OPERATOR_EQ (Lexing.lexeme buf)
+
 let file = ref ""
 
 let line = ref 0
@@ -147,6 +150,11 @@ let Literal =
 | StringLiteral
 | NullLiteral
 
+(* Assignment operators, except '=', from section 3.12 *)
+
+let AssignmentOperator =
+  ('+' | '-' | '*' | '/' | '&' | '|' | '^' | '%' | "<<" | ">>" | ">>>") '='
+
 rule token = parse
 | WhiteSpace  { token lexbuf }
 | LineTerminator  { next_line (); token lexbuf }
@@ -193,17 +201,7 @@ rule token = parse
 | "<<"  { LS }
 | ">>"  { SRS }
 | ">>>"  { URS }
-| "+="  { OPERATOR_EQ PLUS }
-| "-="  { OPERATOR_EQ MINUS }
-| "*="  { OPERATOR_EQ TIMES }
-| "/="  { OPERATOR_EQ DIV }
-| "&="  { OPERATOR_EQ AND }
-| "|="  { OPERATOR_EQ OR }
-| "^="  { OPERATOR_EQ XOR }
-| "%="  { OPERATOR_EQ MOD }
-| "<<="  { OPERATOR_EQ LS }
-| ">>="  { OPERATOR_EQ SRS }
-| ">>>="  { OPERATOR_EQ URS }
+| AssignmentOperator  { assign_op lexbuf }
 
 | SUB? eof { EOF }
 
