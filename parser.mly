@@ -12,6 +12,7 @@
    James Gosling, Bill Joy, Guy Steele, Gilad Bracha */
 
 %{
+open List
 open Syntax
 %}
 
@@ -121,20 +122,20 @@ ReferenceType:
 ;
 
 ClassOrInterfaceType:
-	Name  { $1 }
+	Name  { rev $1 }
 ;
 
 ClassType:
-	Name  { $1 }
+	Name  { rev $1 }
 ;
 
 InterfaceType:
-	Name  { $1 }
+	Name  { rev $1 }
 ;
 
 ArrayType:
 	PrimitiveType LB RB  { ArrayType $1 }
-|	Name LB RB  { ArrayType (TypeName $1) }
+|	Name LB RB  { ArrayType (TypeName (rev $1)) }
 |	ArrayType LB RB  { ArrayType $1 }
 ;
 
@@ -142,7 +143,7 @@ ArrayType:
 
 Name:
 	Identifier  { [$1] }
-|	Name DOT Identifier  { $1 @ [$3] }
+|	Name DOT Identifier  { $3 :: $1 }
 ;
 
 /* 7.3 */
@@ -154,12 +155,12 @@ CompilationUnit:
 
 ImportDeclarations:
 	ImportDeclaration  { [$1] }
-|	ImportDeclarations ImportDeclaration  { $1 @ [$2] }
+|	ImportDeclarations ImportDeclaration  { $2 :: $1 }
 ;
 
 ImportDeclarationsOpt:
 	/* empty */  { [] }
-|	ImportDeclarations  { $1 }
+|	ImportDeclarations  { rev $1 }
 ;
 
 TypeDeclarations:
@@ -175,7 +176,7 @@ TypeDeclarationsOpt:
 /* 7.4.1 */
 
 PackageDeclaration:
-	PACKAGE Name SM  { $2 }
+	PACKAGE Name SM  { rev $2 }
 ;
 
 PackageDeclarationOpt:
@@ -193,13 +194,13 @@ ImportDeclaration:
 /* 7.5.1 */
 
 SingleTypeImportDeclaration:
-	IMPORT Name SM  { $2 }
+	IMPORT Name SM  { rev $2 }
 ;
 
 /* 7.5.2 */
 
 TypeImportOnDemandDeclaration:
-	IMPORT Name DOT TIMES SM  { $2 @ [star_ident] }
+	IMPORT Name DOT TIMES SM  { rev (star_ident :: $2) }
 ;
 
 /* 7.6 */
@@ -233,12 +234,12 @@ ClassDeclaration:
 
 Modifiers:
 	Modifier  { [$1] }
-|	Modifiers Modifier  { $1 @ [$2] }
+|	Modifiers Modifier  { $2 :: $1 }
 ;
 
 ModifiersOpt:
 	/* empty */  { [] }
-|	Modifiers  { $1 }
+|	Modifiers  { rev $1 }
 ;
 
 Modifier:
@@ -269,7 +270,7 @@ SuperOpt:
 /* 8.1.4 */
 
 Interfaces:
-	IMPLEMENTS InterfaceTypeList  { $2 }
+	IMPLEMENTS InterfaceTypeList  { rev $2 }
 ;
 
 InterfacesOpt:
@@ -279,7 +280,7 @@ InterfacesOpt:
 
 InterfaceTypeList:
 	InterfaceType  { [$1] }
-|	InterfaceTypeList CM InterfaceType  { $1 @ [$3] }
+|	InterfaceTypeList CM InterfaceType  { $3 :: $1 }
 ;
 
 /* 8.1.5 */
@@ -316,12 +317,12 @@ ClassMemberDeclaration:
 /* 8.3 */
 
 FieldDeclaration:
-	ModifiersOpt Type VariableDeclarators SM  { field_decls $1 $2 $3 }
+	ModifiersOpt Type VariableDeclarators SM  { field_decls $1 $2 (rev $3) }
 ;
 
 VariableDeclarators:
 	VariableDeclarator  { [$1] }
-|	VariableDeclarators CM VariableDeclarator  { $1 @ [$3] }
+|	VariableDeclarators CM VariableDeclarator  { $3 :: $1 }
 ;
 
 VariableDeclarator:
@@ -361,12 +362,12 @@ MethodDeclarator:
 
 FormalParameterList:
 	FormalParameter  { [$1] }
-|	FormalParameterList CM FormalParameter  { $1 @ [$3] }
+|	FormalParameterList CM FormalParameter  { $3 :: $1 }
 ;
 
 FormalParameterListOpt:
 	/* empty */  { [] }
-|	FormalParameterList  { $1 }
+|	FormalParameterList  { rev $1 }
 ;
 
 FormalParameter:
@@ -381,7 +382,7 @@ FinalOpt:
 /* 8.4.4 */
 
 Throws:
-	THROWS ClassTypeList  { $2 }
+	THROWS ClassTypeList  { rev $2 }
 ;
 
 ThrowsOpt:
@@ -391,7 +392,7 @@ ThrowsOpt:
 
 ClassTypeList:
 	ClassType  { [$1] }
-|	ClassTypeList CM ClassType  { $1 @ [$3] }
+|	ClassTypeList CM ClassType  { $3 :: $1 }
 ;
 
 /* 8.4.5 */
@@ -445,7 +446,7 @@ ExplicitConstructorInvocation:
 	 * Not in 2nd edition Java Language Specification.
 	 */
 |	Name DOT SUPER LP ArgumentListOpt RP SM
-		{ constructor_invocation ($1 @ [super_ident]) $5 }
+		{ constructor_invocation (rev (super_ident :: $1)) $5 }
 ;
 
 /* 9.1 */
@@ -460,12 +461,12 @@ InterfaceDeclaration:
 
 ExtendsInterfaces:
 	EXTENDS InterfaceType  { [$2] }
-|	ExtendsInterfaces CM InterfaceType  { $1 @ [$3] }
+|	ExtendsInterfaces CM InterfaceType  { $3 :: $1 }
 ;
 
 ExtendsInterfacesOpt:
 	/* empty */  { [] }
-|	ExtendsInterfaces  { $1 }
+|	ExtendsInterfaces  { rev $1 }
 ;
 
 /* 9.1.3 */
@@ -500,7 +501,7 @@ InterfaceMemberDeclaration:
 
 ConstantDeclaration:
 	ModifiersOpt Type VariableDeclarators SM
-		{ field_decls $1 $2 $3 }
+		{ field_decls $1 $2 (rev $3) }
 ;
 
 /* 9.4 */
@@ -516,12 +517,12 @@ AbstractMethodDeclaration:
 
 ArrayInitializer:
 	LC CommaOpt RC  { ArrayInit [] }
-|	LC VariableInitializers CommaOpt RC  { ArrayInit $2 }
+|	LC VariableInitializers CommaOpt RC  { ArrayInit (rev $2) }
 ;
 
 VariableInitializers:
 	VariableInitializer  { [$1] }
-|	VariableInitializers CM VariableInitializer  { $1 @ [$3] }
+|	VariableInitializers CM VariableInitializer  { $3 :: $1 }
 ;
 
 CommaOpt:
@@ -558,8 +559,8 @@ LocalVariableDeclarationStatement:
 ;
 
 LocalVariableDeclaration:
-	Type VariableDeclarators  { var_decls [] $1 $2 }
-|	FINAL Type VariableDeclarators  { var_decls [Final] $2 $3 }
+	Type VariableDeclarators  { var_decls [] $1 (rev $2) }
+|	FINAL Type VariableDeclarators  { var_decls [Final] $2 (rev $3) }
 ;
 
 /* 14.5 */
@@ -654,22 +655,23 @@ SwitchStatement:
 SwitchBlock:
 	LC RC  { [] }
 |	LC SwitchLabels RC  { [$2, []] }
-|	LC SwitchBlockStatementGroups RC  { $2 }
-|	LC SwitchBlockStatementGroups SwitchLabels RC  { $2 @ [$3, []] }
+|	LC SwitchBlockStatementGroups RC  { rev $2 }
+|	LC SwitchBlockStatementGroups SwitchLabels RC
+		{ rev ((rev $3, []) :: $2) }
 ;
 
 SwitchBlockStatementGroups:
 	SwitchBlockStatementGroup  { [$1] }
-|	SwitchBlockStatementGroups SwitchBlockStatementGroup  { $1 @ [$2] }
+|	SwitchBlockStatementGroups SwitchBlockStatementGroup  { $2 :: $1 }
 ;
 
 SwitchBlockStatementGroup:
-	SwitchLabels BlockStatements  { $1, $2 }
+	SwitchLabels BlockStatements  { rev $1, $2 }
 ;
 
 SwitchLabels:
 	SwitchLabel  { [$1] }
-|	SwitchLabels SwitchLabel  { $1 @ [$2] }
+|	SwitchLabels SwitchLabel  { $2 :: $1 }
 ;
 
 SwitchLabel:
@@ -711,7 +713,7 @@ ForStatementNoShortIf:
 ;
 
 ForInit:
-	StatementExpressionList  { $1 }
+	StatementExpressionList  { rev $1 }
 |	LocalVariableDeclaration  { $1 }
 ;
 
@@ -726,7 +728,7 @@ ExpressionOpt:
 ;
 
 ForUpdate:
-	StatementExpressionList  { $1 }
+	StatementExpressionList  { rev $1 }
 ;
 
 ForUpdateOpt:
@@ -736,7 +738,7 @@ ForUpdateOpt:
 
 StatementExpressionList:
 	StatementExpression  { [Expr $1] }
-|	StatementExpressionList CM StatementExpression  { $1 @ [Expr $3] }
+|	StatementExpressionList CM StatementExpression  { Expr $3 :: $1 }
 ;
 
 /* 14.14 */
@@ -777,18 +779,18 @@ SynchronizedStatement:
 /* 14.19 */
 
 TryStatement:
-	TRY Block Catches  { Try ($2, $3, None) }
+	TRY Block Catches  { Try ($2, rev $3, None) }
 |	TRY Block CatchesOpt Finally  { Try ($2, $3, Some $4) }
 ;
 
 Catches:
 	CatchClause  { [$1] }
-|	Catches CatchClause  { $1 @ [$2] }
+|	Catches CatchClause  { $2 :: $1 }
 ;
 
 CatchesOpt:
 	/* empty */  { [] }
-|	Catches  { $1 }
+|	Catches  { rev $1 }
 ;
 
 CatchClause:
@@ -814,7 +816,7 @@ PrimaryNoNewArray:
 	Literal  { Literal $1 }
 |	ClassLiteral  { $1 }
 |	THIS  { Name [this_ident] }
-|	Name DOT THIS  { Name ($1 @ [this_ident]) }
+|	Name DOT THIS  { Name (rev (this_ident :: $1)) }
 |	LP Expression RP  { $2 }
 |	ClassInstanceCreationExpression  { $1 }
 |	FieldAccess  { $1 }
@@ -826,7 +828,7 @@ PrimaryNoNewArray:
 
 ClassLiteral:
 	PrimitiveType DOT CLASS  { ClassLiteral $1 }
-|	Name DOT CLASS  { ClassLiteral (TypeName $1) }
+|	Name DOT CLASS  { ClassLiteral (TypeName (rev $1)) }
 |	ArrayType DOT CLASS  { ClassLiteral $1 }
 |	VOID DOT CLASS  { ClassLiteral void_type }
 ;
@@ -842,17 +844,17 @@ ClassInstanceCreationExpression:
 	 * Not in 2nd edition Java Language Specification.
 	 */
 |	Name DOT NEW Identifier LP ArgumentListOpt RP ClassBodyOpt
-		{ NewQualifiedClass (Name $1, $4, $6, $8) }
+		{ NewQualifiedClass (Name (rev $1), $4, $6, $8) }
 ;
 
 ArgumentList:
 	Expression  { [$1] }
-|	ArgumentList CM Expression  { $1 @ [$3] }
+|	ArgumentList CM Expression  { $3 :: $1 }
 ;
 
 ArgumentListOpt:
 	/* empty */  { [] }
-|	ArgumentList  { $1 }
+|	ArgumentList  { rev $1 }
 ;
 
 ClassBodyOpt:
@@ -864,18 +866,18 @@ ClassBodyOpt:
 
 ArrayCreationExpression:
 	NEW PrimitiveType DimExprs DimsOpt
-		{ NewArray ($2, $3, $4, None) }
+		{ NewArray ($2, rev $3, $4, None) }
 |	NEW Name DimExprs DimsOpt
-		{ NewArray (TypeName $2, $3, $4, None) }
+		{ NewArray (TypeName (rev $2), rev $3, $4, None) }
 |	NEW PrimitiveType Dims ArrayInitializer
 		{ NewArray ($2, [], $3, Some $4) }
 |	NEW Name Dims ArrayInitializer
-		{ NewArray (TypeName $2, [], $3, Some $4) }
+		{ NewArray (TypeName (rev $2), [], $3, Some $4) }
 ;
 
 DimExprs:
 	DimExpr  { [$1] }
-|	DimExprs DimExpr  { $1 @ [$2] }
+|	DimExprs DimExpr  { $2 :: $1 }
 ;
 
 DimExpr:
@@ -900,25 +902,25 @@ FieldAccess:
 |	SUPER DOT Identifier
 		{ Name [super_ident; $3] }
 |	Name DOT SUPER DOT Identifier
-		{ Name ($1 @ [super_ident; $5]) }
+		{ Name (rev ($5 :: super_ident :: $1)) }
 ;
 
 /* 15.12 */
 
 MethodInvocation:
-	Name LP ArgumentListOpt RP  { Call (Name $1, $3) }
+	Name LP ArgumentListOpt RP  { Call (Name (rev $1), $3) }
 |	Primary DOT Identifier LP ArgumentListOpt RP
 		{ Call (Dot ($1, $3), $5) }
 |	SUPER DOT Identifier LP ArgumentListOpt RP
 		{ Call (Name [super_ident; $3], $5) }
 |	Name DOT SUPER DOT Identifier LP ArgumentListOpt RP
-		{ Call (Name ($1 @ [super_ident; $5]), $7) }
+		{ Call (Name (rev ($5 :: super_ident :: $1)), $7) }
 ;
 
 /* 15.13 */
 
 ArrayAccess:
-	Name LB Expression RB  { ArrayAccess (Name $1, $3) }
+	Name LB Expression RB  { ArrayAccess (Name (rev $1), $3) }
 |	PrimaryNoNewArray LB Expression RB  { ArrayAccess ($1, $3) }
 ;
 
@@ -926,7 +928,7 @@ ArrayAccess:
 
 PostfixExpression:
 	Primary  { $1 }
-|	Name  { Name $1 }
+|	Name  { Name (rev $1) }
 |	PostIncrementExpression  { $1 }
 |	PostDecrementExpression  { $1 }
 ;
@@ -1097,7 +1099,7 @@ Assignment:
 ;
 
 LeftHandSide:
-	Name  { Name $1 }
+	Name  { Name (rev $1) }
 |	FieldAccess  { $1 }
 |	ArrayAccess  { $1 }
 ;

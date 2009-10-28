@@ -140,7 +140,7 @@ let operator_precedence e =
 
   | Assignment _ -> Right 1
 
-  | _ -> raise (Invalid_argument "precedence")
+  | _ -> invalid_arg "precedence"
 
 let precedence e =
   match operator_precedence e with
@@ -409,26 +409,26 @@ and print_for_clause f list =
       fprintf f "%a, %a" print_field fld
 	(print_comma_list (print_for_local_var fld.f_var.v_type)) rest
   | [] -> ()
-  | _ -> raise (Invalid_argument "print_for_clause")
+  | _ -> invalid_arg "print_for_clause"
 
 and print_expr_stmt f stmt =
   match stmt with
   | Expr e -> print_expr f e
-  | _ -> raise (Invalid_argument "print_expr_stmt")
+  | _ -> invalid_arg "print_expr_stmt"
 
 and print_for_local_var t f st =
   let rec convert typ id =
     if typ = t then id
     else match typ with
     | ArrayType typ' -> convert typ' (synth_id (id_string id ^ "[]"))
-    | TypeName _ -> raise (Failure "print_for_local_var: convert")
+    | TypeName _ -> failwith "print_for_local_var: convert"
   in
   match st with
   | LocalVar fld ->
       fprintf f "%a%a"
 	print_ident (convert fld.f_var.v_type fld.f_var.v_name)
 	(print_option (fun f -> fprintf f "= %a" print_init)) fld.f_init
-  | _ -> raise (Failure "print_for_local_var")
+  | _ -> failwith "print_for_local_var"
 
 and print_catches f  =
   print_space_list print_catch f
