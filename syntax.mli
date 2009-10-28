@@ -78,7 +78,7 @@ and stmt =
   | Empty
   | Label of string * stmt
   | Expr of expr
-  | If of expr * stmt * stmt
+  | If of expr * stmt * stmt option
   | Switch of expr * (case list * stmt list) list
   | While of expr * stmt
   | Do of stmt * expr
@@ -104,34 +104,36 @@ and expr =
   | NewArray of typ * expr list * int * init option
   | Dot of expr * string
   | Call of expr * expr list
+  | ArrayAccess of expr * expr
   | Postfix of expr * op
   | Prefix of op * expr
   | Cast of typ * expr
   | Infix of expr * op * expr
   | InstanceOf of expr * typ
   | Conditional of expr * expr * expr
+  | Assignment of expr * op * expr
   | Name of string list
 
-val compilation_unit: name option * name list * decl list -> compilation_unit
+val compilation_unit: name option -> name list -> decl list -> compilation_unit
 
 val class_decl:
-    modifiers * string * name option * name list * decl list -> class_decl
+    modifiers -> string -> name option -> name list -> decl list -> class_decl
 
-val method_decl: method_decl * stmt -> method_decl
+val method_decl: method_decl -> stmt -> method_decl
 
-val interface_decl: modifiers * string * name list * decl list -> interface
+val interface_decl: modifiers -> string -> name list -> decl list -> interface
 
 val method_header:
-    modifiers * typ * (var_decl_id * var list) * name list -> method_decl
+    modifiers -> typ -> (var_decl_id * var list) -> name list -> method_decl
 
 val field_decls:
-    modifiers * typ * (var_decl_id * init option) list -> decl list
+    modifiers -> typ -> (var_decl_id * init option) list -> decl list
 
 val var_decls:
-    modifiers * typ * (var_decl_id * init option) list -> stmt list
+    modifiers -> typ -> (var_decl_id * init option) list -> stmt list
 
-val formal_decl: modifiers * typ * var_decl_id -> var
+val formal_decl: modifiers -> typ -> var_decl_id -> var
 
-val constructor: modifiers * (string * var list) * name list * stmt -> decl
+val constructor: modifiers -> (string * var list) -> name list -> stmt -> decl
 
 val type_name : expr -> typ

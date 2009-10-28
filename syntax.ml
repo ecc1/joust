@@ -78,7 +78,7 @@ and stmt =
   | Empty
   | Label of string * stmt
   | Expr of expr
-  | If of expr * stmt * stmt
+  | If of expr * stmt * stmt option
   | Switch of expr * (case list * stmt list) list
   | While of expr * stmt
   | Do of stmt * expr
@@ -104,25 +104,27 @@ and expr =
   | NewArray of typ * expr list * int * init option
   | Dot of expr * string
   | Call of expr * expr list
+  | ArrayAccess of expr * expr
   | Postfix of expr * op
   | Prefix of op * expr
   | Cast of typ * expr
   | Infix of expr * op * expr
   | InstanceOf of expr * typ
   | Conditional of expr * expr * expr
+  | Assignment of expr * op * expr
   | Name of string list
 
-let compilation_unit (pkg, ims, dcls) =	
+let compilation_unit pkg ims dcls =	
   { package = pkg; imports = ims; decls = dcls }
 
-let class_decl (mods, name, super, ifs, body) =
+let class_decl mods name super ifs body =
   { cl_mods = mods; cl_name = name; cl_super = super;
     cl_impls = ifs; cl_body = body }
 
-let method_decl (hdr, body) =
+let method_decl hdr body =
   { hdr with m_body = body }
 
-let interface_decl (mods, name, extends, body) =
+let interface_decl mods name extends body =
   { if_mods = mods; if_name = name; if_exts = extends; if_body = body }
 
 (* Move array dimensions from variable name to type. *)
@@ -132,13 +134,13 @@ let rec canon_var mods t v =
   | IdentDecl str -> { v_mods = mods; v_type = t; v_name = str }
   | ArrayDecl v' -> canon_var mods (ArrayType t) v'
 
-let method_header (mods, mtype, (v, formals), throws) =
+let method_header mods mtype (v, formals) throws =
   { m_var = canon_var mods mtype v; m_formals = formals;
     m_throws = throws; m_body = Empty }
 
 (* Return a list of field declarations in canonical form. *)
 
-let decls f (mods, vtype, vars) =
+let decls f mods vtype vars =
   let dcl (v, init) =
     f { f_var = canon_var mods vtype v; f_init = init }
   in
@@ -148,9 +150,9 @@ let field_decls = decls (fun x -> Field x)
 
 let var_decls = decls (fun x -> LocalVar x)
 
-let formal_decl (mods, t, v) = canon_var mods t v
+let formal_decl mods t v = canon_var mods t v
 
-let constructor (mods, (id, formals), throws, body) =
+let constructor mods (id, formals) throws body =
   Constructor { m_var = { v_mods = mods; v_type = TypeName []; v_name = id};
 		m_formals = formals; m_throws = throws; m_body = body }
 

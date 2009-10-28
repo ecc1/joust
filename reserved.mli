@@ -1,1 +1,1 @@
-val lookup : string -> Parser.token option
+val lookup: string -> Parser.token option

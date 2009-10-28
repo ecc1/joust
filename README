@@ -1,0 +1,23 @@
+Pretty-printing options:
+  pretty.ml should be symbolically linked to one of the following:
+    pretty_canon.ml
+      prints expressions in canonical form (fully parenthesized)
+    pretty_bare.ml
+      prints expressions in bare form with fewer parentheses
+    pretty_min.ml
+      prints expressions with minimal parentheses
+  *** WARNING: always do "make clean" after changing the symlink ***
+
+Java source code used for testing:
+  Java 2 SDK <http://www.sun.com/software/communitysource/java2/index.html>
+  Java 2 documentation examples <http://java.sun.com/j2se/1.3/docs.html>
+  NetBeans <http://www.netbeans.org/downloads.html>
+
+  find /usr/local/... -name '*.java' > java-files
+
+Regression tests:
+  xargs ./fixpoint.sh < java-files >& test.out
+  diff java-files test.out
+
+  xargs ./precedence.sh < java-files >& test.out
+  diff java-files test.out

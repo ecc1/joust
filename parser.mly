@@ -151,7 +151,7 @@ Name:
 
 CompilationUnit:
 	PackageDeclarationOpt ImportDeclarationsOpt TypeDeclarationsOpt
-	{ compilation_unit ($1, $2, $3) }
+	{ compilation_unit $1 $2 $3 }
 ;
 
 ImportDeclarations:
@@ -216,7 +216,7 @@ TypeDeclaration:
 
 ClassDeclaration:
 	ModifiersOpt CLASS Identifier SuperOpt InterfacesOpt ClassBody
-		{ class_decl ($1, $3, $4, $5, $6) }
+		{ class_decl $1 $3 $4 $5 $6 }
 ;
 
 /* 8.1.1 */
@@ -318,7 +318,7 @@ ClassMemberDeclaration:
 /* 8.3 */
 
 FieldDeclaration:
-	ModifiersOpt Type VariableDeclarators SM  { field_decls ($1, $2, $3) }
+	ModifiersOpt Type VariableDeclarators SM  { field_decls $1 $2 $3 }
 ;
 
 VariableDeclarators:
@@ -344,14 +344,14 @@ VariableInitializer:
 /* 8.4 */
 
 MethodDeclaration:
-	MethodHeader MethodBody  { method_decl ($1, $2) }
+	MethodHeader MethodBody  { method_decl $1 $2 }
 ;
 
 MethodHeader:
 	ModifiersOpt Type MethodDeclarator ThrowsOpt
-		{ method_header ($1, $2, $3, $4) }
+		{ method_header $1 $2 $3 $4 }
 |	ModifiersOpt VOID MethodDeclarator ThrowsOpt
-		{ method_header ($1, TypeName ["void"], $3, $4) }
+		{ method_header $1 (TypeName ["void"]) $3 $4 }
 ;
 
 MethodDeclarator:
@@ -372,7 +372,7 @@ FormalParameterListOpt:
 ;
 
 FormalParameter:
-	FinalOpt Type VariableDeclaratorId  { formal_decl ($1, $2, $3) }
+	FinalOpt Type VariableDeclaratorId  { formal_decl $1 $2 $3 }
 ;
 
 FinalOpt:
@@ -419,7 +419,7 @@ StaticInitializer:
 
 ConstructorDeclaration:
 	ModifiersOpt ConstructorDeclarator ThrowsOpt ConstructorBody
-		{ constructor ($1, $2, $3, $4) }
+		{ constructor $1 $2 $3 $4 }
 ;
 
 ConstructorDeclarator:
@@ -443,6 +443,11 @@ ExplicitConstructorInvocation:
 		{ Expr (Call (Name ["super"], $3)) }
 |	Primary DOT SUPER LP ArgumentListOpt RP SM
 		{ Expr (Call (Dot ($1, "super"), $5)) }
+	/*
+	 * Not in 2nd edition Java Language Specification.
+	 */
+|	Name DOT SUPER LP ArgumentListOpt RP SM
+		{ Expr (Call (Dot (Name $1, "super"), $5)) }
 ;
 
 /* 9.1 */
@@ -450,7 +455,7 @@ ExplicitConstructorInvocation:
 InterfaceDeclaration:
 	ModifiersOpt INTERFACE Identifier
 		ExtendsInterfacesOpt InterfaceBody
-			{ interface_decl ($1, $3, $4, $5) }
+			{ interface_decl $1 $3 $4 $5 }
 ;
 
 /* 9.1.2 */
@@ -492,21 +497,21 @@ InterfaceMemberDeclaration:
 /* 9.3 */
 
 /*
- * Note: final semicolon was missing from draft 2nd edition spec.
+ * Note: semicolon is missing in 2nd edition Java Language Specification.
  */
 
 ConstantDeclaration:
 	ModifiersOpt Type VariableDeclarators SM
-		{ field_decls ($1, $2, $3) }
+		{ field_decls $1 $2 $3 }
 ;
 
 /* 9.4 */
 
 AbstractMethodDeclaration:
 	ModifiersOpt Type MethodDeclarator ThrowsOpt SM
-		{ method_header ($1, $2, $3, $4) }
+		{ method_header $1 $2 $3 $4 }
 |	ModifiersOpt VOID MethodDeclarator ThrowsOpt SM
-		{ method_header ($1, TypeName ["void"], $3, $4) }
+		{ method_header $1 (TypeName ["void"]) $3 $4 }
 ;
 
 /* 10.6 */
@@ -555,8 +560,8 @@ LocalVariableDeclarationStatement:
 ;
 
 LocalVariableDeclaration:
-	Type VariableDeclarators  { var_decls ([], $1, $2) }
-|	FINAL Type VariableDeclarators  { var_decls ([Final], $2, $3) }
+	Type VariableDeclarators  { var_decls [] $1 $2 }
+|	FINAL Type VariableDeclarators  { var_decls [Final] $2 $3 }
 ;
 
 /* 14.5 */
@@ -628,17 +633,17 @@ StatementExpression:
 
 IfThenStatement:
 	IF LP Expression RP Statement
-		{ If ($3, $5, Empty) }
+		{ If ($3, $5, None) }
 ;
 
 IfThenElseStatement:
 	IF LP Expression RP StatementNoShortIf ELSE Statement
-		{ If ($3, $5, $7) }
+		{ If ($3, $5, Some $7) }
 ;
 
 IfThenElseStatementNoShortIf:
 	IF LP Expression RP StatementNoShortIf ELSE StatementNoShortIf
-		{ If ($3, $5, $7) }
+		{ If ($3, $5, Some $7) }
 ;
 
 /* 14.10 */
@@ -790,6 +795,10 @@ CatchesOpt:
 
 CatchClause:
 	CATCH LP FormalParameter RP Block  { $3, $5 }
+	/*
+	 * Not in 2nd edition Java Language Specification.
+	 */
+|	CATCH LP FormalParameter RP EmptyStatement  { $3, $5 }
 ;
 
 Finally:
@@ -831,6 +840,11 @@ ClassInstanceCreationExpression:
 		{ NewClass (TypeName $2, $4, $6) }
 |	Primary DOT NEW Identifier LP ArgumentListOpt RP ClassBodyOpt
 		{ NewQualifiedClass ($1, $4, $6, $8) }
+	/*
+	 * Not in 2nd edition Java Language Specification.
+	 */
+|	Name DOT NEW Identifier LP ArgumentListOpt RP ClassBodyOpt
+		{ NewQualifiedClass (Name $1, $4, $6, $8) }
 ;
 
 ArgumentList:
@@ -906,8 +920,8 @@ MethodInvocation:
 /* 15.13 */
 
 ArrayAccess:
-	Name LB Expression RB  { Infix (Name $1, "[]", $3) }
-|	PrimaryNoNewArray LB Expression RB  { Infix ($1, "[]", $3) }
+	Name LB Expression RB  { ArrayAccess (Name $1, $3) }
+|	PrimaryNoNewArray LB Expression RB  { ArrayAccess ($1, $3) }
 ;
 
 /* 15.14 */
@@ -1081,7 +1095,7 @@ AssignmentExpression:
 
 Assignment:
 	LeftHandSide AssignmentOperator AssignmentExpression
-		{ Infix ($1, $2, $3) }
+		{ Assignment ($1, $2, $3) }
 ;
 
 LeftHandSide:
